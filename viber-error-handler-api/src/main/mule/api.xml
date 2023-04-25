@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="5e6ce444-7aeb-4d82-bf42-6d5183b875ae" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="sendErrorToViber" doc:id="6f58a6c5-493f-498c-a8f2-7722f6a6c043" >
+		<http:listener doc:name="POST /test" doc:id="9efe3cd5-0119-4d8b-a5b6-369828502ef7" config-ref="HTTP_Listener_config" path="/test"/>
+		<ee:transform doc:name="Add payload" doc:id="770bd171-8004-4345-8ea4-5fa90ba1d882" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"user_ns": "f43574u21033730",
+	"data": {
+		"version": "v1",
+		"content": {
+			"messages": [{
+				"type": "text",
+				"text": "Error while fetching data from Account database"
+			}],
+			"actions": [{
+				"action": "add_tag",
+				"tag_name": "tag name"
+			}],
+			"quick_replies": [{
+				"type": "node",
+				"caption": "Show",
+				"target": "node_ns"
+			}],
+			"goto": "node name or node_ns"
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Send to Viber" doc:id="eb100bdc-7f1d-4d02-baac-2991f4c8322d" url="https://www.uchat.com.au/api/subscriber/send-content">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer 2rTqB1lEyG9MGQ06JV7UPJxzz68Ahz6c4l4ockhnqY2nHygBldrRtqweRtyi",
+	"Content-Type" : "application/json",
+	"accept" : "application/json"
+}]]]></http:headers>
+		</http:request>
+	</flow>
+</mule>
